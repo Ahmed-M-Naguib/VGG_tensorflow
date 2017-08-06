@@ -6,7 +6,7 @@ import tensorflow as tf
 import numpy as np
 
 
-def conv(layer_name, x, out_channels, kernel_size=None, stride=None, is_pretrain=True):
+def conv(layer_name, x, out_channels, kernel_size=None, stride=None, is_pretrain=True, reuse=True):
     """
     Convolution op wrapper, the Activation id ReLU
     :param layer_name: layer name, eg: conv1, conv2, ...
@@ -23,7 +23,7 @@ def conv(layer_name, x, out_channels, kernel_size=None, stride=None, is_pretrain
 
     in_channels = x.get_shape()[-1]
 
-    with tf.variable_scope(layer_name):
+    with tf.variable_scope(layer_name, reuse=reuse):
         w = tf.get_variable(name="weights",
                             shape=[kernel_size[0], kernel_size[1], in_channels, out_channels],
                             dtype=tf.float32,
@@ -80,7 +80,7 @@ def batch_norm(x):
     return x
 
 
-def FC_layer(layer_name, x, out_nodes):
+def FC_layer(layer_name, x, out_nodes, reuse=True):
     """
     Wrapper for fully-connected layer with ReLU activation function
     :param layer_name: FC layer name, eg: 'FC1', 'FC2', ...
@@ -94,7 +94,7 @@ def FC_layer(layer_name, x, out_nodes):
     else:
         size = shape[-1].value
 
-    with tf.variable_scope(layer_name):
+    with tf.variable_scope(layer_name, reuse=reuse):
         w = tf.get_variable('weights',
                             shape=[size, out_nodes],
                             initializer=tf.contrib.layers.xavier_initializer())
@@ -198,12 +198,14 @@ def load_with_skip(data_path, session, skip_layer):
     """
     data_dict = np.load(data_path, encoding='latin1').item()
 
+    op = []
     for key in data_dict:
         if key not in skip_layer:
             with tf.variable_scope(key, reuse=True):
                 for subkey, data in zip(('weights', 'biases'), data_dict[key]):
-                    session.run(tf.get_variable(subkey).assign(data))
-
+                    op = [op, tf.get_variable(subkey).assign(data)]
+                    # session.run(tf.get_variable(subkey).assign(data))
+    session.run(op)
 
 def test_load():
     """

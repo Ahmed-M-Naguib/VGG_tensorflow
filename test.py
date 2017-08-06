@@ -2,6 +2,9 @@ import tensorflow as tf
 import VGG
 import tools
 import input_data
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy import misc
 
 IMG_W = 32
 IMG_H = 32
@@ -11,32 +14,72 @@ learning_rate = 0.01
 MAX_STEP = 15000
 IS_PRETRAIN = True
 
+# img = misc.imread('./image/motocycle.jpg')
+# img=misc.imresize(img,[224,224,3])
+# img_tf = tf.Variable(img)
+# testImage = sess.run(img_tf)
 
-# logits = VGG.VGG16(train_image_batch, N_CLASSES, IS_PRETRAIN)
-# loss = tools.loss(logits, train_label_batch)
-# accuracy = tools.accuracy(logits, train_label_batch)
-# my_global_step = tf.Variable(0, trainable=False, name='global_step')
-# train_op = tools.optimize(loss, learning_rate, my_global_step)
-#
-# x = tf.placeholder(dtype=tf.float32, shape=[BATCH_SIZE, IMG_H, IMG_W, 3])
-# y_ = tf.placeholder(dtype=tf.int32, shape=[BATCH_SIZE, N_CLASSES])
+# filename_queue = tf.train.string_input_producer(['./image/motocycle.jpg']) #  list of files to read
+# reader = tf.WholeFileReader()
+# key, value = reader.read(filename_queue)
+# my_img = tf.image.decode_jpeg(value) # use png or jpg decoder based on your files.
+# my_img2 = tf.image.resize_images(my_img,[224,224])
+# # my_img = tf.reshape(my_img, [1, 224, 224, 3])
+# # Start populating the filename queue.
+# coord = tf.train.Coordinator()
+# threads = tf.train.start_queue_runners(coord=coord, sess=sess)
+# for i in range(1): #length of your filename list
+#     testImage = my_img2.eval(session=sess) #here is your image Tensor :)
+# coord.request_stop()
+# coord.join(threads)
 
-init = tf.global_variables_initializer()
-sess = tf.Session()
-sess.run(init)
-
-with tf.name_scope('input'):
-    val_image_batch, val_label_batch = input_data.read_cifar10('./cifar10/cifar-10-batches-bin',
-                                                               is_train=False,
-                                                               batch_size=BATCH_SIZE,
-                                                               shuffle=False)
-
-logits = VGG.VGG16(val_image_batch, N_CLASSES, IS_PRETRAIN)
+# print(testImage.shape)
+# fig = plt.figure()
+# plt.imshow(testImage)
+# plt.show()
 
 
+# with tf.Graph().as_default():
+
+
+img = misc.imread('./image/motocycle.jpg')
+img=misc.imresize(img,[224,224,3])
+img_tf = tf.Variable(img)
+img_tf2 = tf.reshape(img_tf,[1,224,224,3])
+img_tf2 = tf.cast(img_tf2, tf.float32)
+img_tf3 = tf.reshape(img_tf2,[224,224,3])
+
+
+# Prepare VGG16 Model
+print('Preparing VGG16 Model ...\n')
+VGG.VGG16_Model()
+
+
+saver = tf.train.Saver(tf.global_variables())
 
 # load pretrain weights
+print('Loading VGG16 Pretrained Params ...\n')
+sess = tf.Session()
+sess.run(tf.global_variables_initializer())
+sess.run(tf.initialize_all_variables())
+
+# testImage = sess.run(img_tf)
+# testImage3 = sess.run(img_tf3)
+# print(testImage.shape)
+# print(testImage3.shape)
+# fig = plt.figure()
+# fig.add_subplot(1,2,1)
+# plt.imshow(testImage)
+# fig.add_subplot(1,2,2)
+# plt.imshow(testImage3)
+# plt.show()
+
 tools.load_with_skip('./VGG16_pretrain/vgg16.npy', sess, [])
+
+print('Testing Network!\n')
+logits = VGG.VGG16(img_tf2, 1000, True)
+print(logits.eval(session=sess), '\n')
+
 
 # with tf.Graph().as_default():
 #     log_dir = './logs2/train/'
@@ -71,3 +114,6 @@ tools.load_with_skip('./VGG16_pretrain/vgg16.npy', sess, [])
 #         finally:
 #             coord.request_stop()
 #             coord.join(threads)
+
+
+print('Done!\n')
