@@ -71,6 +71,8 @@ def read_cifar10(data_dir, is_train, batch_size, shuffle):
         label_batch = tf.cast(label_batch, dtype=tf.int32)
         label_batch = tf.reshape(label_batch, [batch_size, n_classes])
 
+        images = tf.image.resize_images(images,[224,224])
+
         return images, label_batch
 
 

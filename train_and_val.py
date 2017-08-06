@@ -7,17 +7,16 @@
 # 1. run training_and_val.py and call train() in the console
 # 2. call evaluate() in the console to test
 
+import math
 import os
 import os.path
 
-import math
 import numpy as np
 import tensorflow as tf
 
 import input_data
-import VGG
 import tools
-
+import VGG
 
 IMG_W = 32
 IMG_H = 32
